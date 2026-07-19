@@ -15,6 +15,42 @@ let currentPage = 1;
 let currentParams = null;
 let shownCount = 0;
 
+// ---------- per-job status (applied / saved / rejected), persisted server-side ----------
+
+let statuses = {};
+
+async function loadStatuses() {
+  try { statuses = await fetch("/api/statuses").then(r => r.json()); }
+  catch { statuses = {}; }
+}
+
+function jobKey(job) {
+  return `${job.source}:${job.siteJobId}`;
+}
+
+async function setJobStatus(job, status) {
+  const key = jobKey(job);
+  const next = statuses[key]?.status === status ? null : status; // click again to clear
+  if (next) statuses[key] = { status: next, title: job.title, company: job.company };
+  else delete statuses[key];
+  try {
+    await fetch("/api/statuses", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key, status: next, title: job.title, company: job.company }),
+    });
+  } catch { /* keep the optimistic local state */ }
+}
+
+function applyStatusVisual(card, job) {
+  const s = statuses[jobKey(job)]?.status;
+  card.classList.toggle("st-applied", s === "applied");
+  card.classList.toggle("st-saved", s === "saved");
+  card.classList.toggle("st-rejected", s === "rejected");
+  for (const b of card.querySelectorAll(".status-btn"))
+    b.classList.toggle("on", b.dataset.status === s);
+}
+
 // ---------- tabs ----------
 
 const tabs = {
@@ -137,6 +173,28 @@ function jobCard(job, extras = null) {
     card.appendChild(apply);
   }
 
+  const actions = document.createElement("div");
+  actions.className = "card-actions";
+  for (const [status, icon, label] of [
+    ["saved", "★", "Save"],
+    ["applied", "✓", "Applied"],
+    ["rejected", "✕", "Not suitable"],
+  ]) {
+    const btn = document.createElement("button");
+    btn.className = `status-btn ${status}`;
+    btn.dataset.status = status;
+    btn.textContent = icon;
+    btn.title = label;
+    btn.addEventListener("click", async () => {
+      await setJobStatus(job, status);
+      applyStatusVisual(card, job);
+      if (!tabs.forme[1].hidden) renderMatches();
+    });
+    actions.appendChild(btn);
+  }
+  card.appendChild(actions);
+  applyStatusVisual(card, job);
+
   return card;
 }
 
@@ -145,6 +203,7 @@ function jobCard(job, extras = null) {
 let fmData = null;
 let fmLevel = "all";
 let fmSort = "date";
+let fmStatusFilter = "all";
 
 function compareMatches(a, b) {
   const dateOf = m => (m.job.publishedAt ? Date.parse(m.job.publishedAt) : 0);
@@ -159,13 +218,22 @@ function renderMatches() {
   fmResults.innerHTML = "";
   if (!fmData) return;
 
+  const statusOf = m => statuses[jobKey(m.job)]?.status;
   const visible = fmData.jobs
     .filter(m => fmLevel === "all" || m.seniority === fmLevel)
+    .filter(m => fmStatusFilter === "all"
+      ? statusOf(m) !== "rejected"           // "not suitable" jobs stay out of the way
+      : statusOf(m) === fmStatusFilter)
     .sort(compareMatches);
   for (const m of visible) fmResults.appendChild(jobCard(m.job, m));
 
   const counts = {};
-  for (const m of fmData.jobs) counts[m.seniority] = (counts[m.seniority] || 0) + 1;
+  const statusCounts = { saved: 0, applied: 0, rejected: 0 };
+  for (const m of fmData.jobs) {
+    counts[m.seniority] = (counts[m.seniority] || 0) + 1;
+    const s = statusOf(m);
+    if (s) statusCounts[s]++;
+  }
   const breakdown = ["Junior", "Mid", "Senior", "Any"]
     .filter(l => counts[l])
     .map(l => `${counts[l]} ${l === "Any" ? "unspecified" : l.toLowerCase()}`)
@@ -173,7 +241,8 @@ function renderMatches() {
 
   fmStatus.textContent =
     `Showing ${visible.length} of ${fmData.jobs.length} jobs (${breakdown}) out of ${fmData.scanned} scanned — ` +
-    `excluded: ${fmData.excludedGermanRequired} German required, ${fmData.excludedGermanContent} German content`;
+    `excluded: ${fmData.excludedGermanRequired} German required, ${fmData.excludedGermanContent} German content — ` +
+    `★ ${statusCounts.saved} saved, ✓ ${statusCounts.applied} applied, ✕ ${statusCounts.rejected} not suitable`;
 }
 
 async function runMatch() {
@@ -209,9 +278,13 @@ document.getElementById("fm-levels").addEventListener("click", e => {
     fmSort = btn.dataset.sort;
     for (const b of document.querySelectorAll("#fm-levels .sort"))
       b.classList.toggle("active", b === btn);
+  } else if (btn.dataset.status) {
+    fmStatusFilter = btn.dataset.status;
+    for (const b of document.querySelectorAll("#fm-levels .st"))
+      b.classList.toggle("active", b === btn);
   } else {
     fmLevel = btn.dataset.level;
-    for (const b of document.querySelectorAll("#fm-levels .level:not(.sort)"))
+    for (const b of document.querySelectorAll("#fm-levels .level:not(.sort):not(.st)"))
       b.classList.toggle("active", b === btn);
   }
   renderMatches();
@@ -280,4 +353,4 @@ form.addEventListener("submit", e => {
 
 loadMoreBtn.addEventListener("click", () => search(false));
 
-loadSites().then(() => runMatch());
+loadStatuses().then(loadSites).then(() => runMatch());

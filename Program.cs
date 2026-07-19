@@ -87,7 +87,67 @@ app.MapGet("/api/match", async (
     }
 });
 
+// ---- per-job status (applied / saved / rejected), persisted to data/job-statuses.json ----
+
+var statusLock = new object();
+
+app.MapGet("/api/statuses", (IWebHostEnvironment env) =>
+{
+    lock (statusLock)
+        return Results.Ok(LoadStatuses(env));
+});
+
+app.MapPost("/api/statuses", async (HttpRequest request, IWebHostEnvironment env) =>
+{
+    using var body = await JsonDocument.ParseAsync(request.Body);
+    var root = body.RootElement;
+    if (!root.TryGetProperty("key", out var keyEl) || keyEl.GetString() is not { Length: > 0 } key)
+        return Results.BadRequest(new { error = "key is required" });
+
+    var status = root.TryGetProperty("status", out var s) && s.ValueKind == JsonValueKind.String ? s.GetString() : null;
+    if (status is not (null or "applied" or "saved" or "rejected"))
+        return Results.BadRequest(new { error = "status must be applied, saved, rejected or null" });
+
+    lock (statusLock)
+    {
+        var statuses = LoadStatuses(env);
+        if (status is null)
+            statuses.Remove(key);
+        else
+            statuses[key] = new JobStatusEntry(
+                status,
+                root.TryGetProperty("title", out var t) ? t.GetString() : null,
+                root.TryGetProperty("company", out var c) ? c.GetString() : null,
+                DateTimeOffset.UtcNow);
+        SaveStatuses(env, statuses);
+        return Results.Ok(statuses);
+    }
+});
+
 app.Run("http://localhost:5210");
+
+static string StatusFile(IWebHostEnvironment env) =>
+    Path.Combine(env.ContentRootPath, "data", "job-statuses.json");
+
+static Dictionary<string, JobStatusEntry> LoadStatuses(IWebHostEnvironment env)
+{
+    try
+    {
+        if (File.Exists(StatusFile(env)))
+            return JsonSerializer.Deserialize<Dictionary<string, JobStatusEntry>>(
+                File.ReadAllText(StatusFile(env)),
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? [];
+    }
+    catch { }
+    return [];
+}
+
+static void SaveStatuses(IWebHostEnvironment env, Dictionary<string, JobStatusEntry> statuses)
+{
+    Directory.CreateDirectory(Path.GetDirectoryName(StatusFile(env))!);
+    File.WriteAllText(StatusFile(env),
+        JsonSerializer.Serialize(statuses, new JsonSerializerOptions { WriteIndented = true }));
+}
 
 static Profile LoadProfile(IWebHostEnvironment env)
 {
@@ -97,3 +157,5 @@ static Profile LoadProfile(IWebHostEnvironment env)
     return JsonSerializer.Deserialize<Profile>(File.ReadAllText(path),
         new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new Profile();
 }
+
+record JobStatusEntry(string Status, string? Title, string? Company, DateTimeOffset UpdatedAt);

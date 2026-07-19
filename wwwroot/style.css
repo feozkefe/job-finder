@@ -190,6 +190,34 @@ h1 { font-size: 1.6rem; }
 }
 .apply:hover { background: #d2ecd9; }
 
+.card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-self: center;
+  flex-shrink: 0;
+}
+
+.status-btn {
+  width: 30px;
+  height: 30px;
+  font-size: 0.9rem;
+  line-height: 1;
+  color: #8a93a8;
+  background: #f4f6f9;
+  border: 1px solid #dfe4ee;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.status-btn:hover { border-color: #aab4c8; color: #4a5368; }
+.status-btn.saved.on { color: #92600a; background: #fdf1dc; border-color: #e5c98a; }
+.status-btn.applied.on { color: #21713a; background: #e4f4e8; border-color: #9fd4ae; }
+.status-btn.rejected.on { color: #b03030; background: #fdeaea; border-color: #eaadad; }
+
+.job-card.st-applied { border-left: 4px solid #3ba55d; }
+.job-card.st-saved { border-left: 4px solid #e5a83a; }
+.job-card.st-rejected { opacity: 0.55; border-left: 4px solid #d66; }
+
 .load-more {
   display: block;
   margin: 20px auto 0;
