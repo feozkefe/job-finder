@@ -35,7 +35,8 @@ h1 { font-size: 1.6rem; }
   border-bottom-color: #fff;
 }
 
-.level-filter { display: flex; gap: 8px; margin-bottom: 12px; }
+.level-filter { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; flex-wrap: wrap; }
+.sort-label { margin-left: 12px; font-size: 0.8rem; font-weight: 600; color: #67718a; }
 .level {
   font: inherit;
   font-size: 0.85rem;

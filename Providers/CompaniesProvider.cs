@@ -61,7 +61,9 @@ public class CompaniesProvider(IHttpClientFactory httpClientFactory, IWebHostEnv
                 || f.Details.PlainDescription.Contains(needle, StringComparison.OrdinalIgnoreCase));
         }
 
-        var list = filtered.ToList();
+        var list = filtered
+            .OrderByDescending(f => f.Job.PublishedAt ?? DateTimeOffset.MinValue)
+            .ToList();
         const int pageSize = 30;
         var page = Math.Max(1, query.Page);
         var jobs = list.Skip((page - 1) * pageSize).Take(pageSize).Select(f => f.Job).ToList();

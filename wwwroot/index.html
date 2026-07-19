@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Job Finder</title>
-  <link rel="stylesheet" href="style.css?v=2">
+  <link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
   <header>
@@ -37,6 +37,9 @@
       <button class="level" data-level="Mid">Mid</button>
       <button class="level" data-level="Senior">Senior</button>
       <button class="level" data-level="Any">Unspecified</button>
+      <span class="sort-label">Sort:</span>
+      <button class="level sort active" data-sort="date">Newest</button>
+      <button class="level sort" data-sort="score">Best match</button>
     </div>
     <div id="fm-status" class="status"></div>
     <div id="fm-results" class="results"></div>
@@ -72,6 +75,6 @@
     <button id="load-more" class="load-more" hidden>Load more</button>
   </section>
 
-  <script src="app.js?v=2"></script>
+  <script src="app.js?v=3"></script>
 </body>
 </html>

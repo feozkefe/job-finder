@@ -144,12 +144,24 @@ function jobCard(job, extras = null) {
 
 let fmData = null;
 let fmLevel = "all";
+let fmSort = "date";
+
+function compareMatches(a, b) {
+  const dateOf = m => (m.job.publishedAt ? Date.parse(m.job.publishedAt) : 0);
+  if (fmSort === "date") {
+    // newest first; undated jobs sink to the bottom, ties broken by score
+    return (dateOf(b) - dateOf(a)) || (b.score - a.score);
+  }
+  return (b.score - a.score) || (dateOf(b) - dateOf(a));
+}
 
 function renderMatches() {
   fmResults.innerHTML = "";
   if (!fmData) return;
 
-  const visible = fmData.jobs.filter(m => fmLevel === "all" || m.seniority === fmLevel);
+  const visible = fmData.jobs
+    .filter(m => fmLevel === "all" || m.seniority === fmLevel)
+    .sort(compareMatches);
   for (const m of visible) fmResults.appendChild(jobCard(m.job, m));
 
   const counts = {};
@@ -193,9 +205,15 @@ fmRun.addEventListener("click", runMatch);
 document.getElementById("fm-levels").addEventListener("click", e => {
   const btn = e.target.closest(".level");
   if (!btn) return;
-  fmLevel = btn.dataset.level;
-  for (const b of document.querySelectorAll("#fm-levels .level"))
-    b.classList.toggle("active", b === btn);
+  if (btn.dataset.sort) {
+    fmSort = btn.dataset.sort;
+    for (const b of document.querySelectorAll("#fm-levels .sort"))
+      b.classList.toggle("active", b === btn);
+  } else {
+    fmLevel = btn.dataset.level;
+    for (const b of document.querySelectorAll("#fm-levels .level:not(.sort)"))
+      b.classList.toggle("active", b === btn);
+  }
   renderMatches();
 });
 
