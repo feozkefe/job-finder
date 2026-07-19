@@ -1,0 +1,28 @@
+{
+  "skills": [
+    ".NET", ".NET Core", "C#", "ASP.NET", "ASP.NET Core", "Web API",
+    "Entity Framework", "Blazor", "Razor",
+    "Java", "Spring Boot", "Microservices", "REST", "SOA",
+    "Python", "JavaScript", "jQuery", "Angular", "HTML", "CSS",
+    "SQL", "Microsoft SQL Server", "PostgreSQL", "Oracle", "Elasticsearch",
+    "Azure", "Azure Pipelines", "Jenkins", "Git", "Continuous Integration", "CI/CD",
+    "Docker", "Agile", "Scrum", "Design Patterns",
+    "RabbitMQ", "SignalR", "TensorFlow", "PyTorch", "Machine Learning", "Deep Learning"
+  ],
+  "wadSkillSlugs": [".net"],
+  "indeedSearches": [".net", "c#", "junior software developer", "junior developer"],
+  "dotnetKeywords": [".net", "asp.net", "c#", "csharp", "dotnet"],
+  "juniorFieldKeywords": [
+    "ai", "artificial intelligence", "machine learning", "deep learning", "computer vision",
+    "fullstack", "full stack", "full-stack",
+    "java", "python", "backend"
+  ],
+  "excludeTitleKeywords": [
+    "senior", "sr.", "lead", "principal", "staff",
+    "head of", "architect", "director", "expert"
+  ],
+  "preferTitleKeywords": ["junior", "entry", "graduate", "trainee", "intern", "working student", "werkstudent", "mid-level", "intermediate"],
+  "city": "berlin",
+  "country": "germany",
+  "pagesPerSearch": 6
+}

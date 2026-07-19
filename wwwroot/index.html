@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Job Finder</title>
+  <link rel="stylesheet" href="style.css?v=2">
+</head>
+<body>
+  <header>
+    <h1>Job Finder</h1>
+    <p class="subtitle">English developer jobs, matched to your profile</p>
+  </header>
+
+  <nav class="tabs">
+    <button id="tab-forme" class="tab active">For Me</button>
+    <button id="tab-search" class="tab">Search</button>
+  </nav>
+
+  <!-- For Me -->
+  <section id="panel-forme">
+    <div class="filters">
+      <label>
+        Site
+        <select id="fm-site"></select>
+      </label>
+      <label class="checkbox">
+        <input id="fm-include-german" type="checkbox">
+        Include jobs that ask for German
+      </label>
+      <button type="button" id="fm-run">Find matches</button>
+      <span class="hint">Uses <code>profile.json</code> — edit it to match your CV</span>
+    </div>
+    <div class="level-filter" id="fm-levels">
+      <button class="level active" data-level="all">All</button>
+      <button class="level" data-level="Junior">Junior</button>
+      <button class="level" data-level="Mid">Mid</button>
+      <button class="level" data-level="Senior">Senior</button>
+      <button class="level" data-level="Any">Unspecified</button>
+    </div>
+    <div id="fm-status" class="status"></div>
+    <div id="fm-results" class="results"></div>
+  </section>
+
+  <!-- Manual search -->
+  <section id="panel-search" hidden>
+    <form id="search-form" class="filters">
+      <label>
+        Site
+        <select id="site"></select>
+      </label>
+      <label>
+        Skill
+        <input id="skill" type="text" value=".net" placeholder="e.g. .net, java, python">
+      </label>
+      <label>
+        City
+        <input id="city" type="text" value="berlin" placeholder="e.g. berlin, munich">
+      </label>
+      <label>
+        Country
+        <input id="country" type="text" value="germany" placeholder="e.g. germany">
+      </label>
+      <label class="checkbox">
+        <input id="english-only" type="checkbox" checked>
+        English only
+      </label>
+      <button type="submit" id="search-btn">Search</button>
+    </form>
+    <div id="status" class="status"></div>
+    <div id="results" class="results"></div>
+    <button id="load-more" class="load-more" hidden>Load more</button>
+  </section>
+
+  <script src="app.js?v=2"></script>
+</body>
+</html>
