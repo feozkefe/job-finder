@@ -189,8 +189,10 @@ public class ApplicationService(IEnumerable<IJobProvider> providers, ClaudeServi
               taken from the posting (never invented company facts).
             - Middle: two or three pieces of evidence from the CV that map directly to the posting's
               most important requirements — name the project, what was built and the stack.
-            - If there is an obvious gap (e.g. a missing technology), you may address it briefly and
-              honestly with adjacent experience; never claim the skill.
+            - Never claim a skill the CV doesn't show, but don't volunteer weaknesses either: do not
+              mention missing nice-to-haves at all. Only if a MUST-HAVE requirement is missing, address
+              it once, in at most one sentence, framed by the closest adjacent experience
+              (e.g. "My integration work so far has been REST, webhook and SOA based; ...").
             - Last paragraph: work authorization in Germany (no sponsorship needed), Berlin-based,
               availability for a conversation. No begging, no clichés.
             - greeting: "Dear <name>," if a hiring manager is named in the posting, otherwise

@@ -8,17 +8,17 @@ Authorized to work in Germany; no visa sponsorship required.
 
 Full-stack developer with 5 years of experience building banking, fintech, e-commerce and SaaS applications
 using C#/.NET and JavaScript/TypeScript. Recent work focuses on LLM integrations, AI agents and secure
-workflow automation. Deliver products from requirements and architecture to deployment, combining backend
-engineering with web and mobile development. Pursuing an M.Sc. in Computer Engineering with research in
+workflow automation. Deliver web, mobile and AI applications from requirements through cloud deployment. Pursuing an M.Sc. in Computer Engineering with research in
 deep learning.
 
 ## Technical Skills
 
-- Languages: C#, TypeScript, JavaScript, SQL, Python, Java
+- Languages: C#, TypeScript, JavaScript, SQL, Python, Java, Dart
 - Backend & Data: ASP.NET Core, .NET 8, EF Core, Node.js, Express, REST APIs, WebSocket, PostgreSQL, SQL Server, Redis, Elasticsearch
-- Frontend & Mobile: React, Next.js, Blazor, React Native (Expo), .NET MAUI
+- Frontend & Mobile: React, Next.js, Blazor, React Native (Expo), Flutter, .NET MAUI
 - AI Engineering: Claude API, LLM integration, structured outputs, AI agents, Model Context Protocol (MCP), human-in-the-loop workflows, vLLM, Qwen, PyTorch
-- Delivery & Quality: Docker, GitHub Actions, Azure DevOps, Jenkins, CI/CD, xUnit, Vitest, multi-tenancy, role-based access control
+- Cloud & DevOps: DigitalOcean Droplets, Hetzner VMs, Linux, Docker, GitHub Actions, Azure DevOps, Jenkins, CI/CD
+- Testing & Architecture: xUnit, Vitest, multi-tenancy, role-based access control
 
 ## Professional Experience
 
@@ -26,8 +26,9 @@ deep learning.
 Berlin, Germany | Jul 2026 – Present
 - Develop agent orchestration for a business workflow automation SaaS pilot using Hermes, Model Context Protocol (MCP) and self-hosted LLMs.
 - Build repository evaluation pipelines with security scanning, isolated execution and human approval controls to assess open-source components before adoption.
-- Built the backend, Next.js dashboard and React Native app for a real-time trading-signal platform using TypeScript, Node.js, PostgreSQL and Redis, including REST/WebSocket APIs and wallet-signed transaction flows.
-- Implemented API authentication, usage quotas, audit logging and operational dashboards, with Docker-based staging environments.
+- Built a real-time trading-signal platform with TypeScript/Node.js APIs, a Next.js dashboard and a React Native app, including WebSocket updates, wallet-signed transactions, API authentication and usage quotas.
+- Developed features for Zaajl, a Flutter ride-hailing app, and deployed it to Google Play; automated signed Android builds with GitHub Actions.
+- Deploy and maintain containerized applications and self-hosted AI services on DigitalOcean Droplets and Hetzner virtual machines.
 
 ### Independent Products & Freelance — Full-Stack Developer & Product Owner
 Berlin, Germany | 2025 – Present
