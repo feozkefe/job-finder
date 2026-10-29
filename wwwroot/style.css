@@ -232,3 +232,64 @@ h1 { font-size: 1.6rem; }
 }
 .load-more:hover { background: #eef3fe; }
 .load-more:disabled { opacity: 0.6; cursor: wait; }
+
+/* ---------- AI workflow ---------- */
+
+.header-btn {
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #2f6fed;
+  background: #fff;
+  border: 1px solid #2f6fed;
+  border-radius: 6px;
+  padding: 6px 14px;
+  margin-top: 8px;
+  cursor: pointer;
+}
+.header-btn:disabled { opacity: 0.6; cursor: wait; }
+
+.ai { margin-top: 10px; }
+.ai-buttons { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.ai-buttons button {
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #3d4660;
+  background: #f4f6f9;
+  border: 1px solid #dfe4ee;
+  border-radius: 6px;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+.ai-buttons button:hover { border-color: #aab4c8; }
+.ai-buttons button:disabled { opacity: 0.6; cursor: wait; }
+.ai-status { font-size: 0.78rem; color: #67718a; }
+.ai-status.error { color: #c0392b; }
+
+.ai-box {
+  margin-top: 8px;
+  padding: 10px 12px;
+  background: #f8f9fc;
+  border: 1px solid #e2e6ee;
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+.ai-box p { margin-bottom: 6px; }
+.ai-box h4 { font-size: 0.8rem; margin: 8px 0 4px; color: #3d4660; }
+.ai-box ul { padding-left: 18px; }
+.ai-box ul.ok li::marker { content: "✓  "; color: #21713a; }
+.ai-box ul.gap li::marker { content: "✕  "; color: #b03030; }
+.ai-head { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
+.ai-notes { color: #67718a; font-style: italic; }
+
+.chip.missing { background: #fdeaea; color: #b03030; }
+.chip.grade { font-weight: 700; margin-left: 6px; vertical-align: middle; }
+.chip.grade-a { background: #21713a; color: #fff; }
+.chip.grade-b { background: #3ba55d; color: #fff; }
+.chip.grade-c { background: #e5a83a; color: #fff; }
+.chip.grade-d, .chip.grade-f { background: #d66; color: #fff; }
+.chip.verdict { font-weight: 600; text-transform: capitalize; }
+.chip.verdict-apply { background: #e4f4e8; color: #21713a; }
+.chip.verdict-maybe { background: #fdf1dc; color: #92600a; }
+.chip.verdict-skip { background: #fdeaea; color: #b03030; }

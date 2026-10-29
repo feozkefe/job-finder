@@ -51,6 +51,174 @@ function applyStatusVisual(card, job) {
     b.classList.toggle("on", b.dataset.status === s);
 }
 
+// ---------- AI workflow (evaluate / tailor CV / cover letter), stored server-side ----------
+
+let evaluations = {};
+
+async function loadEvaluations() {
+  try { evaluations = await fetch("/api/ai/evaluations").then(r => r.json()); }
+  catch { evaluations = {}; }
+}
+
+// must match ApplicationService.SafeKey
+function aiKey(job) {
+  return jobKey(job).toLowerCase().replace(/[^a-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "");
+}
+
+async function postAi(path, job, extra = {}) {
+  const send = description => fetch(path, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ job, description, ...extra }),
+  }).then(async r => ({ ok: r.ok, data: await r.json().catch(() => ({ error: `Request failed (${r.status})` })) }));
+
+  let res = await send(null);
+  if (!res.ok && /description/i.test(res.data.error || "")) {
+    const pasted = prompt("Couldn't read this job's description. Paste it here:");
+    if (pasted) res = await send(pasted);
+  }
+  if (!res.ok) throw new Error(res.data.error || "Request failed");
+  return res.data;
+}
+
+function renderEvaluation(box, ev) {
+  box.innerHTML = "";
+  box.hidden = false;
+  const head = document.createElement("div");
+  head.className = "ai-head";
+  head.append(
+    chip(`${ev.grade} · ${ev.fitScore}`, `grade grade-${ev.grade.toLowerCase()}`),
+    chip(ev.verdict, `verdict verdict-${ev.verdict}`));
+  if (ev.germanRequired) head.appendChild(chip("German required", "warn"));
+  if (ev.coverLetterRecommended) head.appendChild(chip("Cover letter recommended", "reason"));
+  box.appendChild(head);
+
+  const p = document.createElement("p");
+  p.textContent = `${ev.roleSummary} ${ev.seniorityFit}`;
+  box.appendChild(p);
+
+  for (const [title, items, cls] of [["Matches", ev.matchedRequirements, "ok"], ["Gaps", ev.gaps, "gap"]]) {
+    if (!items?.length) continue;
+    const h = document.createElement("h4");
+    h.textContent = title;
+    const ul = document.createElement("ul");
+    ul.className = cls;
+    for (const i of items) ul.appendChild(Object.assign(document.createElement("li"), { textContent: i }));
+    box.append(h, ul);
+  }
+
+  if (ev.atsKeywords?.length) {
+    const h = document.createElement("h4");
+    h.textContent = "ATS keywords";
+    const chips = document.createElement("div");
+    chips.className = "chips";
+    for (const k of ev.atsKeywords) chips.appendChild(chip(k.keyword, k.inCv ? "matched" : "missing"));
+    box.append(h, chips);
+  }
+  if (ev.notes) {
+    const n = document.createElement("p");
+    n.className = "ai-notes";
+    n.textContent = ev.notes;
+    box.appendChild(n);
+  }
+}
+
+function aiPanel(job, h3) {
+  const wrap = document.createElement("div");
+  wrap.className = "ai";
+  const buttons = document.createElement("div");
+  buttons.className = "ai-buttons";
+  const box = document.createElement("div");
+  box.className = "ai-box";
+  box.hidden = true;
+  const status = document.createElement("span");
+  status.className = "ai-status";
+
+  const showGrade = ev => {
+    h3.querySelector(".grade")?.remove();
+    h3.appendChild(chip(ev.grade, `grade grade-${ev.grade.toLowerCase()}`));
+  };
+  const existing = evaluations[aiKey(job)];
+  if (existing) showGrade(existing);
+
+  const run = async (btn, label, action) => {
+    for (const b of buttons.querySelectorAll("button")) b.disabled = true;
+    status.textContent = `${label}… (Claude, ~10–60 s)`;
+    status.classList.remove("error");
+    try {
+      await action();
+      status.textContent = "";
+    } catch (err) {
+      status.textContent = err.message;
+      status.classList.add("error");
+    } finally {
+      for (const b of buttons.querySelectorAll("button")) b.disabled = false;
+    }
+  };
+
+  const evalBtn = document.createElement("button");
+  evalBtn.textContent = existing ? `Fit: ${existing.grade}` : "Evaluate fit";
+  evalBtn.title = "Claude grades this job against your CV (shift-click to re-run)";
+  evalBtn.addEventListener("click", e => {
+    const cached = evaluations[aiKey(job)];
+    if (cached && !e.shiftKey) {
+      if (box.hidden) renderEvaluation(box, cached); else box.hidden = true;
+      return;
+    }
+    run(evalBtn, "Evaluating", async () => {
+      const ev = await postAi("/api/ai/evaluate", job, { force: e.shiftKey });
+      evaluations[aiKey(job)] = ev;
+      evalBtn.textContent = `Fit: ${ev.grade}`;
+      showGrade(ev);
+      renderEvaluation(box, ev);
+    });
+  });
+
+  const cvBtn = document.createElement("button");
+  cvBtn.textContent = "Tailor CV";
+  cvBtn.title = "Generate an ATS-friendly CV for this job (opens a printable page)";
+  cvBtn.addEventListener("click", () => {
+    const tab = window.open("about:blank", "_blank");
+    run(cvBtn, "Tailoring CV", async () => {
+      const { url } = await postAi("/api/ai/cv", job);
+      if (tab) tab.location = url; else window.open(url, "_blank");
+    }).then(() => { if (tab && tab.location.href === "about:blank") tab.close(); });
+  });
+
+  const clBtn = document.createElement("button");
+  clBtn.textContent = "Cover letter";
+  clBtn.addEventListener("click", () => {
+    const tab = window.open("about:blank", "_blank");
+    run(clBtn, "Writing cover letter", async () => {
+      const { url } = await postAi("/api/ai/cover-letter", job);
+      if (tab) tab.location = url; else window.open(url, "_blank");
+    }).then(() => { if (tab && tab.location.href === "about:blank") tab.close(); });
+  });
+
+  buttons.append(evalBtn, cvBtn, clBtn, status);
+  wrap.append(buttons, box);
+  return wrap;
+}
+
+document.getElementById("base-cv").addEventListener("click", async e => {
+  const btn = e.currentTarget;
+  const tab = window.open("about:blank", "_blank");
+  btn.disabled = true;
+  btn.textContent = "Generating…";
+  try {
+    const res = await fetch("/api/ai/base-cv", { method: "POST" });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+    if (tab) tab.location = data.url;
+  } catch (err) {
+    tab?.close();
+    alert(err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Base ATS CV";
+  }
+});
+
 // ---------- tabs ----------
 
 const tabs = {
@@ -160,6 +328,7 @@ function jobCard(job, extras = null) {
   }
   if (job.remote && extras) chips.appendChild(chip("Remote", "remote"));
   body.appendChild(chips);
+  body.appendChild(aiPanel(job, h3));
 
   card.appendChild(body);
 
@@ -353,4 +522,4 @@ form.addEventListener("submit", e => {
 
 loadMoreBtn.addEventListener("click", () => search(false));
 
-loadStatuses().then(loadSites).then(() => runMatch());
+Promise.all([loadStatuses(), loadEvaluations()]).then(loadSites).then(() => runMatch());

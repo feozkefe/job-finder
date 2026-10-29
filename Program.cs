@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Anthropic.Exceptions;
 using JobFinder.Models;
 using JobFinder.Providers;
 using JobFinder.Services;
@@ -20,6 +21,8 @@ builder.Services.AddSingleton<IJobProvider, WeAreDevelopersProvider>();
 builder.Services.AddSingleton<IJobProvider, CompaniesProvider>();
 builder.Services.AddSingleton<IJobProvider, IndeedProvider>();
 builder.Services.AddSingleton<MatchService>();
+builder.Services.AddSingleton<ClaudeService>();
+builder.Services.AddSingleton<ApplicationService>();
 
 var app = builder.Build();
 
@@ -124,7 +127,82 @@ app.MapPost("/api/statuses", async (HttpRequest request, IWebHostEnvironment env
     }
 });
 
+// ---- AI workflow: evaluate fit, tailor CV, cover letter (stored under data/applications/{key}) ----
+
+app.MapGet("/api/ai/evaluations", (ApplicationService apps) => Results.Ok(apps.AllEvaluations()));
+
+app.MapGet("/api/ai/{key}", (string key, ApplicationService apps) => Results.Ok(apps.GetState(key)));
+
+app.MapPost("/api/ai/evaluate", (AiRequest req, ApplicationService apps, CancellationToken ct) =>
+    RunAi(async () =>
+    {
+        var job = await apps.GetOrCreateJobAsync(req.Job, req.Description, ct);
+        if (!req.Force && apps.Load<JobEvaluation>(job.Key, "evaluation.json") is { } cached)
+            return cached;
+        return await apps.EvaluateAsync(job, ct);
+    }));
+
+app.MapPost("/api/ai/cv", (AiRequest req, ApplicationService apps, CancellationToken ct) =>
+    RunAi(async () =>
+    {
+        var job = await apps.GetOrCreateJobAsync(req.Job, req.Description, ct);
+        await apps.TailorCvAsync(job, ct);
+        return new { key = job.Key, url = $"/docs/{job.Key}/cv" };
+    }));
+
+app.MapPost("/api/ai/cover-letter", (AiRequest req, ApplicationService apps, CancellationToken ct) =>
+    RunAi(async () =>
+    {
+        var job = await apps.GetOrCreateJobAsync(req.Job, req.Description, ct);
+        await apps.WriteCoverLetterAsync(job, ct);
+        return new { key = job.Key, url = $"/docs/{job.Key}/cover-letter" };
+    }));
+
+app.MapPost("/api/ai/base-cv", (ApplicationService apps, CancellationToken ct) =>
+    RunAi(async () =>
+    {
+        await apps.TailorCvAsync(null, ct);
+        return new { key = ApplicationService.BaseKey, url = $"/docs/{ApplicationService.BaseKey}/cv" };
+    }));
+
+app.MapGet("/docs/{key}/cv", (string key, ApplicationService apps) =>
+    apps.Load<TailoredCv>(key, "cv.json") is { } cv
+        ? Results.Content(DocumentRenderer.RenderCv(cv, apps.Load<ApplicationJob>(key, "job.json")), "text/html")
+        : Results.NotFound("No CV generated for this job yet."));
+
+app.MapGet("/docs/{key}/cover-letter", (string key, ApplicationService apps) =>
+    apps.Load<CoverLetter>(key, "cover-letter.json") is { } letter
+    && apps.Load<ApplicationJob>(key, "job.json") is { } job
+        ? Results.Content(DocumentRenderer.RenderCoverLetter(letter, job,
+            apps.Load<TailoredCv>(key, "cv.json") ?? apps.Load<TailoredCv>(ApplicationService.BaseKey, "cv.json")), "text/html")
+        : Results.NotFound("No cover letter generated for this job yet."));
+
 app.Run("http://localhost:5210");
+
+// AI calls fail for user-fixable reasons (no API key, no description, refusal): report them to the UI
+static async Task<IResult> RunAi<T>(Func<Task<T>> action)
+{
+    try
+    {
+        return Results.Ok(await action());
+    }
+    catch (InvalidOperationException ex)
+    {
+        return Results.BadRequest(new { error = ex.Message });
+    }
+    catch (AnthropicUnauthorizedException)
+    {
+        return Results.BadRequest(new { error = "No valid Anthropic API key — set ANTHROPIC_API_KEY and restart the app." });
+    }
+    catch (AnthropicRateLimitException)
+    {
+        return Results.Json(new { error = "Claude rate limit reached — wait a minute and try again." }, statusCode: 429);
+    }
+    catch (Exception ex) when (ex is not OperationCanceledException)
+    {
+        return Results.Json(new { error = $"Claude request failed: {ex.Message}" }, statusCode: 502);
+    }
+}
 
 static string StatusFile(IWebHostEnvironment env) =>
     Path.Combine(env.ContentRootPath, "data", "job-statuses.json");
@@ -157,5 +235,7 @@ static Profile LoadProfile(IWebHostEnvironment env)
     return JsonSerializer.Deserialize<Profile>(File.ReadAllText(path),
         new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new Profile();
 }
+
+record AiRequest(Job Job, string? Description, bool Force = false);
 
 record JobStatusEntry(string Status, string? Title, string? Company, DateTimeOffset UpdatedAt);

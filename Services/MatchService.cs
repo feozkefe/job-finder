@@ -55,6 +55,7 @@ public class MatchService(IEnumerable<IJobProvider> providers)
             await ProcessAsync(compDetails, candidates, profile, includeGermanRequired,
                 keep: (job, details, seniority) =>
                     IsDotnet(job, details, profile)
+                    || IsTargetRole(job, profile)
                     || (seniority != "Senior" && IsJuniorField(job, profile)),
                 matched, c => excludedGermanRequired += c, c => excludedGermanContent += c, ct);
         }
@@ -65,7 +66,7 @@ public class MatchService(IEnumerable<IJobProvider> providers)
             scanned += candidates.Count;
             await ProcessAsync(indeedDetails, candidates, profile, includeGermanRequired,
                 keep: (job, details, seniority) =>
-                    IsDotnet(job, details, profile) || seniority == "Junior",
+                    IsDotnet(job, details, profile) || IsTargetRole(job, profile) || seniority == "Junior",
                 matched, c => excludedGermanRequired += c, c => excludedGermanContent += c, ct);
         }
 
@@ -92,8 +93,16 @@ public class MatchService(IEnumerable<IJobProvider> providers)
         {
             for (var page = 1; page <= Math.Max(1, profile.PagesPerSearch); page++)
             {
-                var result = await provider.SearchAsync(
-                    new JobQuery(skill, profile.City, profile.Country, EnglishOnly: true, page), ct);
+                JobSearchResult result;
+                try
+                {
+                    result = await provider.SearchAsync(
+                        new JobQuery(skill, profile.City, profile.Country, EnglishOnly: true, page), ct);
+                }
+                catch (InvalidOperationException)
+                {
+                    break; // unknown skill slug — skip it instead of failing the whole scan
+                }
                 foreach (var job in result.Jobs)
                     if (seen.Add((job.External, job.SiteJobId)))
                         jobs.Add(job);
@@ -157,6 +166,9 @@ public class MatchService(IEnumerable<IJobProvider> providers)
         int germanRequired = 0, germanContent = 0;
         foreach (var (job, details) in await Task.WhenAll(tasks))
         {
+            if (profile.SkipTitleKeywords.Any(k => ContainsWord(job.Title, k)))
+                continue;
+
             if (details?.ContentLanguage == "German")
             {
                 germanContent++;
@@ -186,6 +198,9 @@ public class MatchService(IEnumerable<IJobProvider> providers)
             ContainsWord(job.Title, k)
             || job.Skills.Any(s => s.Equals(k, StringComparison.OrdinalIgnoreCase))
             || (details is not null && ContainsWord(details.PlainDescription, k)));
+
+    private static bool IsTargetRole(Job job, Profile profile) =>
+        profile.TargetRoleKeywords.Any(k => ContainsWord(job.Title, k));
 
     private static bool IsJuniorField(Job job, Profile profile) =>
         profile.JuniorFieldKeywords.Any(k =>
@@ -241,10 +256,12 @@ public class MatchService(IEnumerable<IJobProvider> providers)
         }
         score += matchedSkills.Count * 2;
 
-        if (seniority == "Junior")
+        score += profile.SeniorityBonus.GetValueOrDefault(seniority);
+        if (IsTargetRole(job, profile))
+        {
             score += 3;
-        else if (seniority == "Mid")
-            score += 1;
+            reasons.Add("Target role");
+        }
         if (!requiresGerman && details is not null && details.PlainDescription.Length > 0)
             reasons.Add("No German required");
         if (job.Remote)

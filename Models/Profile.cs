@@ -6,8 +6,10 @@ namespace JobFinder.Models;
 ///
 /// "For Me" rule:
 ///  - WeAreDevelopers: only the searches in <see cref="WadSkillSlugs"/> (English, ALL levels).
-///  - Company boards: English jobs that are either .NET (any level, <see cref="DotnetKeywords"/>)
+///  - Company boards: English jobs that are .NET (any level, <see cref="DotnetKeywords"/>),
+///    OR target roles (any level, <see cref="TargetRoleKeywords"/>),
 ///    OR non-senior jobs in fields from <see cref="JuniorFieldKeywords"/>.
+///  - Titles containing <see cref="SkipTitleKeywords"/> are always dropped.
 ///  - Jobs that require German are always dropped (unless the UI toggle is on).
 /// </summary>
 public class Profile
@@ -32,6 +34,18 @@ public class Profile
     /// <summary>Title words that classify a job as Senior.</summary>
     public List<string> ExcludeTitleKeywords { get; set; } =
         ["senior", "sr.", "lead", "principal", "staff", "head of", "architect", "director", "expert"];
+
+    /// <summary>
+    /// Title keywords of the roles you are targeting (e.g. "ai engineer", "forward deployed").
+    /// Matching jobs are kept at any seniority level and get a score bonus.
+    /// </summary>
+    public List<string> TargetRoleKeywords { get; set; } = [];
+
+    /// <summary>Title words that drop a job entirely (internships, director-level roles, ...).</summary>
+    public List<string> SkipTitleKeywords { get; set; } = [];
+
+    /// <summary>Score bonus per seniority class (Junior / Mid / Senior / Any).</summary>
+    public Dictionary<string, int> SeniorityBonus { get; set; } = new() { ["Junior"] = 3, ["Mid"] = 1 };
 
     /// <summary>Title words that classify a job as Junior.</summary>
     public List<string> PreferTitleKeywords { get; set; } = ["junior", "entry", "graduate", "trainee", "intern", "working student", "werkstudent"];

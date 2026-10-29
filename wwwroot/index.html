@@ -4,12 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Job Finder</title>
-  <link rel="stylesheet" href="style.css?v=4">
+  <link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
   <header>
     <h1>Job Finder</h1>
     <p class="subtitle">English developer jobs, matched to your profile</p>
+    <button type="button" id="base-cv" class="header-btn" title="Clean, general-purpose ATS CV from cv.md">Base ATS CV</button>
   </header>
 
   <nav class="tabs">
@@ -29,7 +30,7 @@
         Include jobs that ask for German
       </label>
       <button type="button" id="fm-run">Find matches</button>
-      <span class="hint">Uses <code>profile.json</code> — edit it to match your CV</span>
+      <span class="hint">Uses <code>profile.json</code> for the scan and <code>cv.md</code> for AI fit / CV / cover letter</span>
     </div>
     <div class="level-filter" id="fm-levels">
       <button class="level active" data-level="all">All</button>
@@ -80,6 +81,6 @@
     <button id="load-more" class="load-more" hidden>Load more</button>
   </section>
 
-  <script src="app.js?v=4"></script>
+  <script src="app.js?v=5"></script>
 </body>
 </html>

@@ -3,9 +3,10 @@
 A local ASP.NET Core web app that hunts for **English-language developer jobs in Germany**
 across multiple sources, filters out postings that require German, and ranks the rest
 against your own skill profile. Built as a personal job-search tool — no accounts,
-no database, no external packages; everything runs on your machine.
+no database; everything runs on your machine. The only package is the Anthropic SDK,
+used for the optional AI fit / CV / cover-letter features.
 
-![.NET 9](https://img.shields.io/badge/.NET-9.0-512BD4) ![No dependencies](https://img.shields.io/badge/NuGet%20packages-0-brightgreen)
+![.NET 9](https://img.shields.io/badge/.NET-9.0-512BD4) ![Anthropic SDK](https://img.shields.io/badge/NuGet-Anthropic-d97757)
 
 ## What it does
 
@@ -30,6 +31,33 @@ Then, for every candidate job:
   matched skills show as green chips, and duplicates appearing on several sources
   are collapsed into the best-scoring copy.
 
+### AI application workflow (Claude)
+
+Every job card gets three buttons, all driven by your master CV in **`cv.md`**:
+
+| Button | What happens |
+|---|---|
+| **Evaluate fit** | Claude grades the job A–F against your CV: fit score, apply/maybe/skip, matched requirements, gaps, ATS keywords (✓ in your CV / ✕ missing), whether German is really required |
+| **Tailor CV** | Claude rewrites the CV for this job — reordered, reworded in the posting's terminology, **never inventing** experience or skills — and opens an ATS-safe A4 page (one column, standard headings, real text). Print → *Save as PDF* to get the file to upload. A yellow box lists what was changed and which gaps could not be covered |
+| **Cover letter** | A short (220–320 words), job-specific letter in the same printable format |
+
+**Base ATS CV** (header button) produces a clean general-purpose version of `cv.md`.
+
+Results are stored per job in `data/applications/{key}/` (job snapshot, evaluation, CV, letter),
+so re-opening is free; shift-click *Evaluate fit* to re-run it. If a source has no
+description, the UI asks you to paste it.
+
+Setup:
+
+```bash
+cp cv.example.md cv.md            # then put your real CV in it (cv.md is git-ignored)
+export ANTHROPIC_API_KEY=sk-ant-…  # Windows: setx ANTHROPIC_API_KEY sk-ant-…  (new terminal after)
+dotnet run
+```
+
+The scan works without a key; only the AI buttons need it. Model: Claude Opus 5.5
+(`Services/ClaudeService.cs`), with structured outputs so every answer is schema-valid JSON.
+
 The **Search** tab is a plain manual search (site + keyword + city + English-only),
 with no filtering magic — useful for one-off queries.
 
@@ -47,13 +75,16 @@ Delete the `cache/` folder to force a full refresh.
 
 ## Configuration
 
-Everything personal lives in two JSON files, re-read on every request (no restart needed):
+Everything personal lives in `cv.md` (AI features) and two JSON files, re-read on every request (no restart needed):
 
 **`profile.json`** — your matching profile:
 - `skills` — CV skills, used for scoring
 - `wadSkillSlugs` / `indeedSearches` — searches to run per source
 - `dotnetKeywords` — what counts as a ".NET job" (kept at any level)
+- `targetRoleKeywords` — titles you are aiming for (AI engineer, FDE, product engineer, …), kept at any level with a score bonus
 - `juniorFieldKeywords` — fields where non-senior roles are also interesting
+- `skipTitleKeywords` — titles dropped entirely (internships, director/head-of roles, …)
+- `seniorityBonus` — score bonus per level (Junior / Mid / Senior / Any)
 - `excludeTitleKeywords` / `preferTitleKeywords` — seniority classification
 - `city`, `country`, `pagesPerSearch`
 
@@ -76,6 +107,9 @@ Program.cs                 minimal API: /api/sites /api/jobs /api/match /api/com
 │  └─ IndeedProvider       scrapes de.indeed.com result pages (job cards are embedded JSON)
 ├─ Services/
 │  ├─ MatchService         the For Me pipeline: collect → language filters → classify → score
+│  ├─ ApplicationService   AI workflow: evaluate / tailor CV / cover letter, prompts + output schemas
+│  ├─ ClaudeService        Anthropic SDK call returning schema-validated JSON
+│  ├─ DocumentRenderer     ATS-safe printable HTML for CVs and cover letters
 │  └─ TextLanguage         cheap German/English stopword detector
 └─ wwwroot/                vanilla HTML/CSS/JS UI, no build step
 ```
