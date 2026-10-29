@@ -154,8 +154,8 @@ public class ApplicationService(IEnumerable<IJobProvider> providers, ClaudeServi
                 </master_cv>
 
                 Produce a clean, general-purpose ATS-friendly version of this CV for AI engineer,
-                forward deployed engineer, product engineer and full-stack (.NET / TypeScript) roles
-                in Berlin. Fix spacing, typos and inconsistent formatting.
+                AI full-stack / AI-native developer, forward deployed engineer, product engineer and
+                full-stack (.NET / TypeScript) roles in Berlin. Fix spacing, typos and inconsistent formatting.
                 """
             : $"""
                 <master_cv>
