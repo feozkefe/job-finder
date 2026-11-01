@@ -307,8 +307,9 @@ function jobCard(job, extras = null) {
   if (extras?.score !== undefined) {
     const badge = document.createElement("span");
     badge.className = "score";
-    badge.textContent = extras.score;
-    badge.title = "Match score";
+    // raw points: 2 per matched skill, +3 target role, +3 mid / +2 senior / +1 unspecified, +1 remote; 30+ = 100
+    badge.textContent = `${Math.min(100, Math.round(extras.score / 30 * 100))}/100`;
+    badge.title = `Match score (${extras.score} raw points: 2 per matched skill, +3 target role, +1–3 level, +1 remote)`;
     h3.appendChild(badge);
   }
   body.appendChild(h3);
