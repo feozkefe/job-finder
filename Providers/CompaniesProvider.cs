@@ -527,15 +527,18 @@ public class CompaniesProvider(IHttpClientFactory httpClientFactory, IWebHostEnv
         return [];
     }
 
+    // remote is only useful when it covers Germany: "Remote (EU)" yes, "Warsaw" flagged remote no
+    private static readonly Regex GermanyOrEuRx = new(
+        @"germany|deutschland|\bdach\b|europe|\beu\b|european union|\bemea\b|\bcet\b|anywhere|worldwide",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
     private static bool LocationOk(Job job, string city)
     {
-        if (job.Remote)
-            return true;
         var loc = job.Location.Trim().ToLowerInvariant();
-        return loc.Length == 0
-            || loc.Contains(city, StringComparison.OrdinalIgnoreCase)
-            || loc.Contains("remote")
-            || loc is "germany" or "deutschland";
+        if (loc.Length == 0 || loc.Contains(city, StringComparison.OrdinalIgnoreCase) || GermanyOrEuRx.IsMatch(loc))
+            return true;
+        // a bare "Remote" (no place named) is kept; a remote job pinned to another country is not
+        return Regex.IsMatch(loc, @"^\W*(fully\s+)?remote\W*$");
     }
 
     private static string[] SlugCandidates(string name)
