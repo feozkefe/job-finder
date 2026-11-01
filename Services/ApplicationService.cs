@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using Anthropic.Models.Beta.Messages;
 using JobFinder.Models;
@@ -214,6 +215,66 @@ public class ApplicationService(IEnumerable<IJobProvider> providers, ClaudeServi
         return letter;
     }
 
+    // ---------- search profile ----------
+
+    /// <summary>
+    /// Derives the job-scan profile (skills, target titles, searches) from cv.md and merges it into
+    /// profile.json; filters such as skip/seniority keywords and the city are kept as they are.
+    /// The previous file is saved as data/profile.backup.json.
+    /// </summary>
+    public async Task<ProfileSuggestion> BuildProfileAsync(CancellationToken ct)
+    {
+        var profilePath = Path.Combine(env.ContentRootPath, "profile.json");
+        var current = File.Exists(profilePath) ? File.ReadAllText(profilePath) : "{}";
+
+        var system = """
+            You configure a job-scanning tool for a software engineer looking for English-speaking
+            jobs in Berlin, Germany. From the candidate's CV, derive the search profile.
+
+            - skills: 40–70 concrete technologies, languages, frameworks, practices and domains that the
+              CV genuinely shows, spelled the way job postings usually write them
+              (e.g. "TypeScript", "Node.js", "ASP.NET Core", "PostgreSQL"). Used to score postings.
+            - targetRoleKeywords: 30–60 lowercase job-title fragments for the roles this candidate should
+              target given their experience and recent direction, including common spelling variants
+              ("full stack", "full-stack", "fullstack", "ai-native", "ai native"). A job whose title
+              contains one is kept at any seniority.
+            - juniorFieldKeywords: 5–12 lowercase broad fields where non-senior roles are also worth seeing.
+            - indeedSearches: 8–12 short lowercase search queries for de.indeed.com covering the target
+              roles (each query is one search, so avoid near-duplicates).
+            - wadSkillSlugs: 2–4 WeAreDevelopers skill slugs as used in their URLs, lowercase
+              (e.g. ".net", "typescript", "python", "react", "node.js").
+            Base everything on the CV; do not add technologies it does not show.
+            """;
+        var prompt = $"""
+            <master_cv>
+            {LoadMasterCv()}
+            </master_cv>
+
+            <current_profile_json>
+            {current}
+            </current_profile_json>
+
+            Derive the search profile for this candidate.
+            """;
+
+        var suggestion = await claude.GenerateJsonAsync<ProfileSuggestion>(system, prompt, ProfileSchema, Effort.Medium, ct);
+
+        var root = JsonNode.Parse(current) as JsonObject ?? new JsonObject();
+        Directory.CreateDirectory(Path.Combine(env.ContentRootPath, "data"));
+        File.WriteAllText(Path.Combine(env.ContentRootPath, "data", "profile.backup.json"), current);
+        root["skills"] = JsonSerializer.SerializeToNode(suggestion.Skills);
+        root["targetRoleKeywords"] = JsonSerializer.SerializeToNode(suggestion.TargetRoleKeywords);
+        root["juniorFieldKeywords"] = JsonSerializer.SerializeToNode(suggestion.JuniorFieldKeywords);
+        root["indeedSearches"] = JsonSerializer.SerializeToNode(suggestion.IndeedSearches);
+        root["wadSkillSlugs"] = JsonSerializer.SerializeToNode(suggestion.WadSkillSlugs);
+        File.WriteAllText(profilePath, root.ToJsonString(new JsonSerializerOptions
+        {
+            WriteIndented = true,
+            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+        }) + "\n");
+        return suggestion;
+    }
+
     // ---------- storage ----------
 
     public ApplicationState GetState(string key)
@@ -360,6 +421,21 @@ public class ApplicationService(IEnumerable<IJobProvider> providers, ClaudeServi
             "education": { "type": "array", "items": {{CvEntrySchema}} },
             "languages": { "type": "string" },
             "changes": {{StringArray}}
+          }
+        }
+        """;
+
+    private const string ProfileSchema = $$"""
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["skills", "targetRoleKeywords", "juniorFieldKeywords", "indeedSearches", "wadSkillSlugs"],
+          "properties": {
+            "skills": {{StringArray}},
+            "targetRoleKeywords": {{StringArray}},
+            "juniorFieldKeywords": {{StringArray}},
+            "indeedSearches": {{StringArray}},
+            "wadSkillSlugs": {{StringArray}}
           }
         }
         """;

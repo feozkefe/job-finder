@@ -219,6 +219,27 @@ document.getElementById("base-cv").addEventListener("click", async e => {
   }
 });
 
+document.getElementById("build-profile").addEventListener("click", async e => {
+  const btn = e.currentTarget;
+  const status = document.getElementById("profile-status");
+  btn.disabled = true;
+  status.classList.remove("error");
+  status.textContent = "Claude is reading cv.md… (~20 s)";
+  try {
+    const res = await fetch("/api/ai/profile", { method: "POST" });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+    status.textContent =
+      `Profile updated: ${data.skills.length} skills, ${data.targetRoleKeywords.length} target titles, ` +
+      `${data.indeedSearches.length} Indeed searches. Re-run "Find matches" to use it.`;
+  } catch (err) {
+    status.textContent = err.message;
+    status.classList.add("error");
+  } finally {
+    btn.disabled = false;
+  }
+});
+
 // ---------- tabs ----------
 
 const tabs = {

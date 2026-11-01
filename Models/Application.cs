@@ -65,3 +65,11 @@ public record ApplicationState(
     JobEvaluation? Evaluation,
     bool HasCv,
     bool HasCoverLetter);
+
+/// <summary>Search profile fields Claude derives from the CV; merged into profile.json.</summary>
+public record ProfileSuggestion(
+    IReadOnlyList<string> Skills,
+    IReadOnlyList<string> TargetRoleKeywords,
+    IReadOnlyList<string> JuniorFieldKeywords,
+    IReadOnlyList<string> IndeedSearches,
+    IReadOnlyList<string> WadSkillSlugs);

@@ -158,6 +158,9 @@ app.MapPost("/api/ai/cover-letter", (AiRequest req, ApplicationService apps, Can
         return new { key = job.Key, url = $"/docs/{job.Key}/cover-letter" };
     }));
 
+app.MapPost("/api/ai/profile", (ApplicationService apps, CancellationToken ct) =>
+    RunAi(() => apps.BuildProfileAsync(ct)));
+
 app.MapPost("/api/ai/base-cv", (ApplicationService apps, CancellationToken ct) =>
     RunAi(async () =>
     {

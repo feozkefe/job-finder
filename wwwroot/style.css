@@ -247,6 +247,8 @@ h1 { font-size: 1.6rem; }
   margin-top: 8px;
   cursor: pointer;
 }
+.header-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 8px; }
+.header-actions .header-btn { margin-top: 0; }
 .header-btn:disabled { opacity: 0.6; cursor: wait; }
 
 .ai { margin-top: 10px; }

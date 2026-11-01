@@ -4,13 +4,17 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Job Finder</title>
-  <link rel="stylesheet" href="style.css?v=5">
+  <link rel="stylesheet" href="style.css?v=6">
 </head>
 <body>
   <header>
     <h1>Job Finder</h1>
     <p class="subtitle">English developer jobs, matched to your profile</p>
-    <button type="button" id="base-cv" class="header-btn" title="Clean, general-purpose ATS CV from cv.md">Base ATS CV</button>
+    <div class="header-actions">
+      <button type="button" id="build-profile" class="header-btn" title="Claude reads cv.md and rewrites the skills, target titles and searches in profile.json">Create profile from CV</button>
+      <button type="button" id="base-cv" class="header-btn" title="Clean, general-purpose ATS CV from cv.md">Base ATS CV</button>
+      <span id="profile-status" class="ai-status"></span>
+    </div>
   </header>
 
   <nav class="tabs">
@@ -81,6 +85,6 @@
     <button id="load-more" class="load-more" hidden>Load more</button>
   </section>
 
-  <script src="app.js?v=5"></script>
+  <script src="app.js?v=6"></script>
 </body>
 </html>
