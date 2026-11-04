@@ -13,9 +13,9 @@ The **For Me** tab runs a personalized scan:
 
 | Source | What is collected | Rule |
 |---|---|---|
-| [WeAreDevelopers](https://www.wearedevelopers.com) | `.net` category search (configurable) | English postings, **all** seniority levels |
-| Company career boards (~520 companies in `companies.json`) | Every job on each board | English AND (.NET at any level, OR non-senior roles in your fields: AI/ML, fullstack, Java, Python, …) |
-| [Indeed](https://de.indeed.com) | Configurable queries with Indeed's English-language filter | .NET at any level, OR junior roles |
+| [WeAreDevelopers](https://www.wearedevelopers.com) | `.net`, `python`, `machine-learning` category searches (configurable) | English postings, **all** seniority levels |
+| Company career boards (~520 companies in `companies.json`) | Every job on each board | English AND (.NET or AI roles at any level, OR non-senior roles in your fields: fullstack, Python, backend, …) |
+| [Indeed](https://de.indeed.com) | Configurable queries with Indeed's English-language filter | .NET or AI roles at any level, OR junior roles |
 
 Then, for every candidate job:
 
@@ -53,6 +53,7 @@ Everything personal lives in two JSON files, re-read on every request (no restar
 - `skills` — CV skills, used for scoring
 - `wadSkillSlugs` / `indeedSearches` — searches to run per source
 - `dotnetKeywords` — what counts as a ".NET job" (kept at any level)
+- `aiKeywords` — title words that mark an AI role (AI engineer, LLM, GenAI…) when the title also names an engineering role: kept at any level and ranked higher
 - `juniorFieldKeywords` — fields where non-senior roles are also interesting
 - `excludeTitleKeywords` / `preferTitleKeywords` — seniority classification
 - `city`, `country`, `pagesPerSearch`

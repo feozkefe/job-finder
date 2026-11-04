@@ -7,8 +7,9 @@ namespace JobFinder.Services;
 /// <summary>
 /// Runs the "For Me" search:
 ///  - WeAreDevelopers: only the profile's WAD searches (default ".net"), English, ALL levels.
-///  - Company boards: English jobs that are .NET (any level) OR non-senior jobs
-///    in the profile's junior fields (AI/ML, fullstack, Java, Python, ...).
+///  - Company boards: English jobs that are .NET or AI roles (any level) OR non-senior jobs
+///    in the profile's junior fields (fullstack, Python, backend, ...).
+///  - Indeed: .NET or AI roles (any level) OR junior jobs.
 /// Jobs requiring German are dropped in both sources (unless toggled on),
 /// and everything is scored against the profile skills.
 /// </summary>
@@ -55,6 +56,7 @@ public class MatchService(IEnumerable<IJobProvider> providers)
             await ProcessAsync(compDetails, candidates, profile, includeGermanRequired,
                 keep: (job, details, seniority) =>
                     IsDotnet(job, details, profile)
+                    || IsAiRole(job, profile)
                     || (seniority != "Senior" && IsJuniorField(job, profile)),
                 matched, c => excludedGermanRequired += c, c => excludedGermanContent += c, ct);
         }
@@ -65,7 +67,7 @@ public class MatchService(IEnumerable<IJobProvider> providers)
             scanned += candidates.Count;
             await ProcessAsync(indeedDetails, candidates, profile, includeGermanRequired,
                 keep: (job, details, seniority) =>
-                    IsDotnet(job, details, profile) || seniority == "Junior",
+                    IsDotnet(job, details, profile) || IsAiRole(job, profile) || seniority == "Junior",
                 matched, c => excludedGermanRequired += c, c => excludedGermanContent += c, ct);
         }
 
@@ -187,6 +189,19 @@ public class MatchService(IEnumerable<IJobProvider> providers)
             || job.Skills.Any(s => s.Equals(k, StringComparison.OrdinalIgnoreCase))
             || (details is not null && ContainsWord(details.PlainDescription, k)));
 
+    // An AI keyword alone also tags "AI Product Manager" or "HR Analyst - Automation & AI";
+    // an AI role needs an engineering word in the same title.
+    private static readonly string[] EngineeringTitleWords =
+        ["engineer", "engineering", "developer", "scientist", "researcher", "programmer", "fde"];
+
+    private static bool IsAiRole(Job job, Profile profile) =>
+        profile.AiKeywords.Any(k => ContainsWord(job.Title, k))
+        && EngineeringTitleWords.Any(w => job.Title.Contains(w, StringComparison.OrdinalIgnoreCase))
+        && !NonIcTitleWords.Any(w => job.Title.Contains(w, StringComparison.OrdinalIgnoreCase));
+
+    // "Engineering Manager, AI Platform" is a people-management role, not an AI engineering one.
+    private static readonly string[] NonIcTitleWords = ["manager", "director", "head of"];
+
     private static bool IsJuniorField(Job job, Profile profile) =>
         profile.JuniorFieldKeywords.Any(k =>
             ContainsWord(job.Title, k)
@@ -249,6 +264,11 @@ public class MatchService(IEnumerable<IJobProvider> providers)
             reasons.Add("No German required");
         if (job.Remote)
             score += 1;
+        if (IsAiRole(job, profile))
+        {
+            score += 4;
+            reasons.Add("AI role");
+        }
 
         return new MatchedJob(
             job, score, matchedSkills, reasons, requiresGerman,

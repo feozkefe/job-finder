@@ -1,21 +1,32 @@
 {
   "skills": [
-    ".NET", ".NET Core", "C#", "ASP.NET", "ASP.NET Core", "Web API",
-    "Entity Framework", "Blazor", "Razor",
-    "Java", "Spring Boot", "Microservices", "REST", "SOA",
-    "Python", "JavaScript", "jQuery", "Angular", "HTML", "CSS",
-    "SQL", "Microsoft SQL Server", "PostgreSQL", "Oracle", "Elasticsearch",
-    "Azure", "Azure Pipelines", "Jenkins", "Git", "Continuous Integration", "CI/CD",
-    "Docker", "Agile", "Scrum", "Design Patterns",
-    "RabbitMQ", "SignalR", "TensorFlow", "PyTorch", "Machine Learning", "Deep Learning"
+    "AI", "LLM", "Generative AI", "GenAI", "AI Agents", "Agentic", "Tool Calling", "Function Calling",
+    "MCP", "Model Context Protocol", "RAG", "Retrieval-Augmented Generation", "Embeddings",
+    "Vector Database", "pgvector", "LangChain", "LangGraph", "Prompt Engineering",
+    "Structured Outputs", "LLM Evaluation", "Human-in-the-loop",
+    "Claude", "Anthropic", "OpenAI", "vLLM", "Ollama", "Qwen", "PyTorch", "Machine Learning", "Deep Learning",
+    "Python", "FastAPI", "Pydantic", "pandas", "scikit-learn",
+    "C#", ".NET", ".NET Core", "ASP.NET", "ASP.NET Core", "Web API", "Entity Framework", "EF Core", "Blazor", ".NET MAUI",
+    "TypeScript", "JavaScript", "Node.js", "Express", "React", "Next.js", "React Native", "Expo", "Flutter", "Dart",
+    "Java", "Spring Boot", "SQL", "PostgreSQL", "Microsoft SQL Server", "Redis", "Elasticsearch",
+    "REST", "WebSocket", "Microservices", "Multi-tenancy", "SaaS",
+    "Docker", "Linux", "GitHub Actions", "Azure DevOps", "Jenkins", "CI/CD", "Continuous Integration",
+    "xUnit", "Vitest", "pytest", "Git", "Agile", "Scrum"
   ],
-  "wadSkillSlugs": [".net"],
-  "indeedSearches": [".net", "c#", "junior software developer", "junior developer"],
+  "wadSkillSlugs": [".net", "python", "machine-learning"],
+  "indeedSearches": [
+    "ai engineer", "llm engineer", "generative ai", "ai developer",
+    ".net", "c#", "full stack developer"
+  ],
   "dotnetKeywords": [".net", "asp.net", "c#", "csharp", "dotnet"],
+  "aiKeywords": [
+    "ai", "artificial intelligence", "llm", "llms", "genai", "gen ai", "generative ai",
+    "machine learning", "ml engineer", "ml", "agentic", "ai agents", "rag", "nlp", "applied ai"
+  ],
   "juniorFieldKeywords": [
-    "ai", "artificial intelligence", "machine learning", "deep learning", "computer vision",
+    "deep learning", "computer vision",
     "fullstack", "full stack", "full-stack",
-    "java", "python", "backend"
+    "typescript", "python", "backend"
   ],
   "excludeTitleKeywords": [
     "senior", "sr.", "lead", "principal", "staff",

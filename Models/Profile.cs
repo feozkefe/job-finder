@@ -6,8 +6,8 @@ namespace JobFinder.Models;
 ///
 /// "For Me" rule:
 ///  - WeAreDevelopers: only the searches in <see cref="WadSkillSlugs"/> (English, ALL levels).
-///  - Company boards: English jobs that are either .NET (any level, <see cref="DotnetKeywords"/>)
-///    OR non-senior jobs in fields from <see cref="JuniorFieldKeywords"/>.
+///  - Company boards: English jobs that are .NET or AI roles (any level, <see cref="DotnetKeywords"/>,
+///    <see cref="AiKeywords"/>) OR non-senior jobs in fields from <see cref="JuniorFieldKeywords"/>.
 ///  - Jobs that require German are always dropped (unless the UI toggle is on).
 /// </summary>
 public class Profile
@@ -23,6 +23,15 @@ public class Profile
 
     /// <summary>Keywords that mark a job as .NET — kept at ANY seniority level.</summary>
     public List<string> DotnetKeywords { get; set; } = [".net", "asp.net", "c#", "csharp", "dotnet"];
+
+    /// <summary>
+    /// Title/skill keywords that mark a job as an AI role (AI engineer, LLM, GenAI, ...).
+    /// Like .NET jobs, AI roles are kept at ANY seniority level and get a ranking boost.
+    /// Matched on the title only (together with an engineering word such as "engineer" or
+    /// "developer") — almost every description and many skill tags mention "AI" today.
+    /// </summary>
+    public List<string> AiKeywords { get; set; } =
+        ["ai", "artificial intelligence", "llm", "genai", "generative ai", "machine learning", "ml engineer", "agentic", "rag", "nlp"];
 
     /// <summary>Fields where junior/non-senior roles are also interesting.</summary>
     public List<string> JuniorFieldKeywords { get; set; } =
