@@ -53,6 +53,7 @@ Everything personal lives in two JSON files, re-read on every request (no restar
 - `skills` — CV skills, used for scoring
 - `wadSkillSlugs` / `indeedSearches` — searches to run per source
 - `dotnetKeywords` — what counts as a ".NET job" (kept at any level)
+- `anyLevelTitleKeywords` — title words for target engineering roles (full-stack, backend, product engineer…) kept at any seniority
 - `aiKeywords` — title words that mark an AI role (AI engineer, LLM, GenAI…) when the title also names an engineering role: kept at any level and ranked higher
 - `juniorFieldKeywords` — fields where non-senior roles are also interesting
 - `excludeTitleKeywords` / `preferTitleKeywords` — seniority classification

@@ -33,6 +33,12 @@ public class Profile
     public List<string> AiKeywords { get; set; } =
         ["ai", "artificial intelligence", "llm", "genai", "generative ai", "machine learning", "ml engineer", "agentic", "rag", "nlp"];
 
+    /// <summary>
+    /// Title keywords for target engineering roles kept at ANY seniority (full-stack, backend, product
+    /// engineer...). With 5 years of experience, senior postings in these fields are realistic targets.
+    /// </summary>
+    public List<string> AnyLevelTitleKeywords { get; set; } = [];
+
     /// <summary>Fields where junior/non-senior roles are also interesting.</summary>
     public List<string> JuniorFieldKeywords { get; set; } =
         ["ai", "machine learning", "deep learning", "computer vision",

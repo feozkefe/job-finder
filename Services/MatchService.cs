@@ -57,6 +57,7 @@ public class MatchService(IEnumerable<IJobProvider> providers)
                 keep: (job, details, seniority) =>
                     IsDotnet(job, details, profile)
                     || IsAiRole(job, profile)
+                    || IsAnyLevelRole(job, profile)
                     || (seniority != "Senior" && IsJuniorField(job, profile)),
                 matched, c => excludedGermanRequired += c, c => excludedGermanContent += c, ct);
         }
@@ -67,7 +68,7 @@ public class MatchService(IEnumerable<IJobProvider> providers)
             scanned += candidates.Count;
             await ProcessAsync(indeedDetails, candidates, profile, includeGermanRequired,
                 keep: (job, details, seniority) =>
-                    IsDotnet(job, details, profile) || IsAiRole(job, profile) || seniority == "Junior",
+                    IsDotnet(job, details, profile) || IsAiRole(job, profile) || IsAnyLevelRole(job, profile) || seniority == "Junior",
                 matched, c => excludedGermanRequired += c, c => excludedGermanContent += c, ct);
         }
 
@@ -201,6 +202,10 @@ public class MatchService(IEnumerable<IJobProvider> providers)
 
     // "Engineering Manager, AI Platform" is a people-management role, not an AI engineering one.
     private static readonly string[] NonIcTitleWords = ["manager", "director", "head of"];
+
+    private static bool IsAnyLevelRole(Job job, Profile profile) =>
+        profile.AnyLevelTitleKeywords.Any(k => ContainsWord(job.Title, k))
+        && !NonIcTitleWords.Any(w => job.Title.Contains(w, StringComparison.OrdinalIgnoreCase));
 
     private static bool IsJuniorField(Job job, Profile profile) =>
         profile.JuniorFieldKeywords.Any(k =>
